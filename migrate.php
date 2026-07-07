@@ -3,7 +3,6 @@
 
 declare(strict_types=1);
 
-use Symfony\Component\Process\Process;
 use ExcelleInsights\WhatsApp\Support\EnvLoader;
 
 require_once 'vendor/autoload.php';
@@ -24,22 +23,24 @@ $migrationsDir = isset($options['debug'])
     ? $projectRoot . 'database/migrations'
     : $projectRoot . 'vendor/excelle-insights/whatsapp/database/migrations';
 
-function runProcess(Process $process): void
+function runCommand(string $command, string $cwd): void
 {
-    $process->setTimeout(null);
+    $descriptors = [
+        0 => STDIN,
+        1 => STDOUT,
+        2 => STDERR,
+    ];
 
-    if (Process::isTtySupported() && PHP_SAPI === 'cli') {
-        $process->setTty(true);
+    $process = proc_open($command, $descriptors, $pipes, $cwd);
+
+    if (!is_resource($process)) {
+        throw new RuntimeException("Failed to execute: {$command}");
     }
 
-    $process->run(function ($type, $buffer) {
-        echo $buffer;
-    });
+    $exitCode = proc_close($process);
 
-    if (!$process->isSuccessful()) {
-        throw new RuntimeException(
-            trim($process->getErrorOutput() ?: $process->getOutput())
-        );
+    if ($exitCode !== 0) {
+        throw new RuntimeException("Command exited with code {$exitCode}");
     }
 }
 
@@ -68,10 +69,10 @@ if (!file_exists($phinxPath)) {
     echo "Phinx not found. Installing...\n";
 
     try {
-        runProcess(new Process(
-            ['composer', 'require', '--dev', 'robmorgan/phinx:^0.14'],
+        runCommand(
+            'composer require --dev robmorgan/phinx:^0.14',
             $projectRoot
-        ));
+        );
         echo "Phinx installed successfully.\n";
     } catch (Throwable $e) {
         fwrite(STDERR, "Failed to install Phinx:\n{$e->getMessage()}\n");
@@ -108,10 +109,10 @@ PHP
 );
 
 try {
-    runProcess(new Process(
-        [$phinxPath, 'migrate', '-c', $tempConfig],
+    runCommand(
+        "{$phinxPath} migrate -c {$tempConfig}",
         $projectRoot
-    ));
+    );
 
     echo "WhatsApp migrations ran successfully!\n";
 } catch (Throwable $e) {
