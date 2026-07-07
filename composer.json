@@ -1,0 +1,50 @@
+{
+    "name": "excelle-insights/whatsapp",
+    "description": "WhatsApp Cloud API integration package — OAuth, template messaging, business profiles, webhooks, and HTTP request logging",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Excelle Insights",
+            "homepage": "https://excelleinsights.com"
+        }
+    ],
+    "homepage": "https://github.com/excelle-insights/whatsapp",
+    "keywords": [
+        "whatsapp",
+        "whatsapp-cloud-api",
+        "meta",
+        "whatsapp-business-api",
+        "whatsapp-api",
+        "messaging",
+        "template",
+        "webhook"
+    ],
+    "support": {
+        "issues": "https://github.com/excelle-insights/whatsapp/issues",
+        "source": "https://github.com/excelle-insights/whatsapp"
+    },
+    "require": {
+        "php": "^8.1",
+        "ext-json": "*",
+        "ext-pdo": "*",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "robmorgan/phinx": "^0.16.9",
+        "symfony/process": "^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "ExcelleInsights\\WhatsApp\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ExcelleInsights\\WhatsApp\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
