@@ -1,8 +1,21 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+declare(strict_types=1);
 
 use ExcelleInsights\WhatsApp\Support\EnvLoader;
+
+$dir = __DIR__;
+while (!file_exists($dir . '/vendor/autoload.php')) {
+    $parent = dirname($dir);
+    if ($parent === $dir) {
+        fwrite(STDERR, "Unable to find vendor/autoload.php\n");
+        exit(1);
+    }
+    $dir = $parent;
+}
+
+require_once $dir . '/vendor/autoload.php';
+
 EnvLoader::load(__DIR__);
 
 return [
