@@ -271,6 +271,37 @@ class WhatsAppManager
         return $this->getMessageService()->sendTemplate($profileId, $to, $templateName, $params);
     }
 
+    public function sendMedia(
+        int $profileId,
+        string $to,
+        string $type,
+        string $mediaId,
+        ?string $caption = null,
+        ?string $filename = null
+    ): object {
+        return $this->getMessageService()->sendMedia(
+            $profileId, $to, $type, $mediaId, $caption, $filename
+        );
+    }
+
+    public function sendMediaByLink(
+        int $profileId,
+        string $to,
+        string $type,
+        string $link,
+        ?string $caption = null,
+        ?string $filename = null
+    ): object {
+        return $this->getMessageService()->sendMediaByLink(
+            $profileId, $to, $type, $link, $caption, $filename
+        );
+    }
+
+    public function uploadMedia(int $profileId, string $filePath, string $mimeType): object
+    {
+        return $this->getMessageService()->uploadMedia($profileId, $filePath, $mimeType);
+    }
+
     // ---------------------------------------------------------------
     // Webhooks
     // ---------------------------------------------------------------

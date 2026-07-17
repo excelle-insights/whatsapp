@@ -86,6 +86,39 @@ class MessageClient extends BaseClient
         );
     }
 
+    public function sendMediaByLink(
+        string $phoneNumberId,
+        string $to,
+        string $type,
+        string $link,
+        ?string $caption = null,
+        ?string $filename = null
+    ): object {
+        $media = [
+            'link' => $link,
+        ];
+
+        if ($caption !== null) {
+            $media['caption'] = $caption;
+        }
+
+        if ($filename !== null && $type === 'document') {
+            $media['filename'] = $filename;
+        }
+
+        return $this->sendRequest(
+            'POST',
+            "{$phoneNumberId}/messages",
+            [
+                'messaging_product' => 'whatsapp',
+                'recipient_type'    => 'individual',
+                'to'                => $to,
+                'type'              => $type,
+                $type               => $media,
+            ]
+        );
+    }
+
     public function sendInteractive(
         string $phoneNumberId,
         string $to,
