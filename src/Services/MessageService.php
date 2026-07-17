@@ -115,6 +115,159 @@ class MessageService
         }
     }
 
+    public function sendMedia(
+        int $profileId,
+        string $to,
+        string $type,
+        string $mediaId,
+        ?string $caption = null,
+        ?string $filename = null
+    ): object {
+        MessageValidator::validateMedia($to, $type, $mediaId);
+
+        $profile = $this->profiles->find($profileId);
+
+        if (!$profile || !$profile->phone_number_id) {
+            return (object)[
+                'status' => 'failed',
+                'error'  => 'Business profile not found or no phone number configured',
+            ];
+        }
+
+        $localId = $this->messages->create([
+            'profile_id'  => $profileId,
+            'direction'   => 'outbound',
+            'from_number' => $profile->phone_number,
+            'to_number'   => $to,
+            'type'        => $type,
+            'body'        => $caption,
+            'media_id'    => $mediaId,
+            'status'      => 'pending',
+        ]);
+
+        try {
+            $response = $this->client->sendMedia(
+                $profile->phone_number_id,
+                $to,
+                $type,
+                $mediaId,
+                $caption,
+                $filename,
+            );
+
+            if (isset($response->messages[0]->id)) {
+                $this->messages->updateWamId($localId, $response->messages[0]->id, 'sent');
+            }
+
+            return (object)[
+                'status'   => 'sent',
+                'local_id' => $localId,
+                'wam_id'   => $response->messages[0]->id ?? null,
+                'data'     => $response,
+            ];
+        } catch (\Throwable $e) {
+            $this->messages->updateStatus($localId, 'failed');
+
+            return (object)[
+                'status'   => 'failed',
+                'local_id' => $localId,
+                'error'    => $e->getMessage(),
+            ];
+        }
+    }
+
+    public function sendMediaByLink(
+        int $profileId,
+        string $to,
+        string $type,
+        string $link,
+        ?string $caption = null,
+        ?string $filename = null
+    ): object {
+        MessageValidator::validateMedia($to, $type, $link);
+
+        $profile = $this->profiles->find($profileId);
+
+        if (!$profile || !$profile->phone_number_id) {
+            return (object)[
+                'status' => 'failed',
+                'error'  => 'Business profile not found or no phone number configured',
+            ];
+        }
+
+        $localId = $this->messages->create([
+            'profile_id'  => $profileId,
+            'direction'   => 'outbound',
+            'from_number' => $profile->phone_number,
+            'to_number'   => $to,
+            'type'        => $type,
+            'body'        => $caption,
+            'media_id'    => $link,
+            'status'      => 'pending',
+        ]);
+
+        try {
+            $response = $this->client->sendMediaByLink(
+                $profile->phone_number_id,
+                $to,
+                $type,
+                $link,
+                $caption,
+                $filename,
+            );
+
+            if (isset($response->messages[0]->id)) {
+                $this->messages->updateWamId($localId, $response->messages[0]->id, 'sent');
+            }
+
+            return (object)[
+                'status'   => 'sent',
+                'local_id' => $localId,
+                'wam_id'   => $response->messages[0]->id ?? null,
+                'data'     => $response,
+            ];
+        } catch (\Throwable $e) {
+            $this->messages->updateStatus($localId, 'failed');
+
+            return (object)[
+                'status'   => 'failed',
+                'local_id' => $localId,
+                'error'    => $e->getMessage(),
+            ];
+        }
+    }
+
+    public function uploadMedia(int $profileId, string $filePath, string $mimeType): object
+    {
+        $profile = $this->profiles->find($profileId);
+
+        if (!$profile || !$profile->phone_number_id) {
+            return (object)[
+                'status' => 'failed',
+                'error'  => 'Business profile not found or no phone number configured',
+            ];
+        }
+
+        try {
+            $response = $this->client->uploadMedia(
+                $profile->phone_number_id,
+                $filePath,
+                $mimeType,
+            );
+
+            return (object)[
+                'status'     => 'uploaded',
+                'media_id'   => $response->id ?? null,
+                'data'       => $response,
+            ];
+        } catch (\Throwable $e) {
+            return (object)[
+                'status' => 'failed',
+                'error'  => $e->getMessage(),
+            ];
+        }
+    }
+
     public function processIncoming(array $payload): array
     {
         $results = [];
