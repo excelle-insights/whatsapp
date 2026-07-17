@@ -29,7 +29,7 @@ class TemplateRepository
         $stmt->execute([
             ':profile_id'    => $data['profile_id'],
             ':name'          => $data['name'],
-            ':language'      => $data['language'],
+            ':language'      => $data['language'] ?? 'en_US',
             ':category'      => $data['category'] ?? 'MARKETING',
             ':header_format' => $data['header_format'] ?? null,
             ':status'        => $data['status'] ?? 'draft',
