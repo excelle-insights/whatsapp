@@ -18,6 +18,12 @@ class Message
         public readonly string $status,
         public readonly ?int $templateId,
         public readonly ?array $metadata,
+        public readonly ?string $mediaType = null,
+        public readonly ?string $mediaUrl = null,
+        public readonly ?string $mediaMimeType = null,
+        public readonly ?int $mediaFileSize = null,
+        public readonly ?string $caption = null,
+        public readonly ?string $waMediaId = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -35,24 +41,36 @@ class Message
             status: $data['status'] ?? 'received',
             templateId: $data['template_id'] ?? null,
             metadata: $data['metadata'] ?? null,
+            mediaType: $data['media_type'] ?? null,
+            mediaUrl: $data['media_url'] ?? null,
+            mediaMimeType: $data['media_mime_type'] ?? null,
+            mediaFileSize: $data['media_file_size'] ?? null,
+            caption: $data['caption'] ?? null,
+            waMediaId: $data['wa_media_id'] ?? null,
         );
     }
 
     public function toArray(): array
     {
         return [
-            'id'          => $this->id,
-            'profile_id'  => $this->profileId,
-            'direction'   => $this->direction,
-            'wam_id'      => $this->wamId,
-            'from_number' => $this->fromNumber,
-            'to_number'   => $this->toNumber,
-            'type'        => $this->type,
-            'body'        => $this->body,
-            'media_id'    => $this->mediaId,
-            'status'      => $this->status,
-            'template_id' => $this->templateId,
-            'metadata'    => $this->metadata,
+            'id'               => $this->id,
+            'profile_id'       => $this->profileId,
+            'direction'        => $this->direction,
+            'wam_id'           => $this->wamId,
+            'from_number'      => $this->fromNumber,
+            'to_number'        => $this->toNumber,
+            'type'             => $this->type,
+            'body'             => $this->body,
+            'media_id'         => $this->mediaId,
+            'status'           => $this->status,
+            'template_id'      => $this->templateId,
+            'metadata'         => $this->metadata,
+            'media_type'       => $this->mediaType,
+            'media_url'        => $this->mediaUrl,
+            'media_mime_type'  => $this->mediaMimeType,
+            'media_file_size'  => $this->mediaFileSize,
+            'caption'          => $this->caption,
+            'wa_media_id'      => $this->waMediaId,
         ];
     }
 }

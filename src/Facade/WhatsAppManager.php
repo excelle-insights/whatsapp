@@ -22,6 +22,7 @@ use ExcelleInsights\WhatsApp\Repositories\MessageRepository;
 use ExcelleInsights\WhatsApp\Services\BusinessProfileService;
 use ExcelleInsights\WhatsApp\Services\TemplateService;
 use ExcelleInsights\WhatsApp\Services\MessageService;
+use ExcelleInsights\WhatsApp\Services\MediaService;
 
 class WhatsAppManager
 {
@@ -186,10 +187,16 @@ class WhatsAppManager
             $this->http
         );
 
+        $media = new MediaService(
+            $this->getProfileRepo(),
+            $client
+        );
+
         return new MessageService(
             $this->getMessageRepo(),
             $this->getProfileRepo(),
-            $client
+            $client,
+            $media
         );
     }
 
@@ -300,6 +307,23 @@ class WhatsAppManager
     public function uploadMedia(int $profileId, string $filePath, string $mimeType): object
     {
         return $this->getMessageService()->uploadMedia($profileId, $filePath, $mimeType);
+    }
+
+    public function downloadMedia(int $profileId, string $mediaId, string $type, ?string $caption = null): array
+    {
+        $client = new MessageClient(
+            $this->graphApi,
+            $this->apiVersion,
+            $this->auth,
+            $this->http
+        );
+
+        $media = new MediaService(
+            $this->getProfileRepo(),
+            $client
+        );
+
+        return $media->downloadAndStore($profileId, $mediaId, $type, $caption);
     }
 
     // ---------------------------------------------------------------

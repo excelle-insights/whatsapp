@@ -14,6 +14,7 @@ A PHP package for integrating with the **Meta WhatsApp Cloud API**. Handles OAut
 - **Template Management** — Create, list, delete message templates; track approval via webhooks
 - **Message Sending** — Text, template, and media messages
 - **Webhook Processing** — Verify webhooks, receive inbound messages, handle status callbacks
+- **Inbound Media** — Auto-download and store images, videos, audio, documents, stickers
 - **HTTP Request Logging** — Every API call logged to `http_request_logs` table
 - **PDO-based** — Uses MySQL via PDO (extensible to other databases)
 - **Configurable Table Prefix** — All WhatsApp tables use the `WHATSAPP_TABLE_PREFIX` env var
@@ -37,6 +38,7 @@ WHATSAPP_APP_SECRET=your_app_secret
 WHATSAPP_REDIRECT_URI=https://your-app.com/auth-callback.php
 WHATSAPP_TABLE_PREFIX=whatsapp
 WHATSAPP_WEBHOOK_VERIFY_TOKEN=your_verify_token
+WHATSAPP_MEDIA_PATH=uploads/whatsapp
 
 # Database
 DB_DSN=mysql:host=127.0.0.1;dbname=myapp
@@ -121,6 +123,17 @@ $challenge = $webhook->verify();
 // POST request — incoming messages / status updates
 $response = $webhook->process();
 ```
+
+Incoming media messages (image, video, audio, document, sticker) are automatically downloaded to `WHATSAPP_MEDIA_PATH` (default `uploads/whatsapp`) and stored on the message record with `media_type`, `media_url`, `media_mime_type`, `media_file_size`, `caption` and `wa_media_id`.
+
+### 6. Download Media Manually
+
+```php
+$result = $whatsapp->downloadMedia(1, '4567890123456789', 'image', 'caption');
+// ['media_url' => '2026/08/17/a1b2c3d4.jpg', 'media_mime_type' => 'image/jpeg', 'media_file_size' => 12345, 'wa_media_id' => '4567890123456789']
+```
+
+Files are stored at `{WHATSAPP_MEDIA_PATH}/{YYYY}/{MM}/{DD}/{sha1}.{ext}`. Serve them through an authenticated proxy (see `examples/media-proxy.php`); block direct web access to the storage folder.
 
 ## Database Migrations
 

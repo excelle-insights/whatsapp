@@ -20,26 +20,34 @@ class MessageRepository
             INSERT INTO {$this->table} (
                 profile_id, direction, wam_id, from_number, to_number,
                 type, body, media_id, status, template_id, metadata,
-                created_at, updated_at
+                media_type, media_url, media_mime_type, media_file_size,
+                caption, wa_media_id, created_at, updated_at
             ) VALUES (
                 :profile_id, :direction, :wam_id, :from_number, :to_number,
                 :type, :body, :media_id, :status, :template_id, :metadata,
-                NOW(), NOW()
+                :media_type, :media_url, :media_mime_type, :media_file_size,
+                :caption, :wa_media_id, NOW(), NOW()
             )
         ");
 
         $stmt->execute([
-            ':profile_id'  => $data['profile_id'] ?? null,
-            ':direction'   => $data['direction'],
-            ':wam_id'      => $data['wam_id'] ?? null,
-            ':from_number' => $data['from_number'],
-            ':to_number'   => $data['to_number'],
-            ':type'        => $data['type'],
-            ':body'        => $data['body'] ?? null,
-            ':media_id'    => $data['media_id'] ?? null,
-            ':status'      => $data['status'] ?? 'received',
-            ':template_id' => $data['template_id'] ?? null,
-            ':metadata'    => !empty($data['metadata']) ? json_encode($data['metadata']) : null,
+            ':profile_id'        => $data['profile_id'] ?? null,
+            ':direction'         => $data['direction'],
+            ':wam_id'            => $data['wam_id'] ?? null,
+            ':from_number'       => $data['from_number'],
+            ':to_number'         => $data['to_number'],
+            ':type'              => $data['type'],
+            ':body'              => $data['body'] ?? null,
+            ':media_id'          => $data['media_id'] ?? null,
+            ':status'            => $data['status'] ?? 'received',
+            ':template_id'       => $data['template_id'] ?? null,
+            ':metadata'          => !empty($data['metadata']) ? json_encode($data['metadata']) : null,
+            ':media_type'        => $data['media_type'] ?? null,
+            ':media_url'         => $data['media_url'] ?? null,
+            ':media_mime_type'   => $data['media_mime_type'] ?? null,
+            ':media_file_size'   => $data['media_file_size'] ?? null,
+            ':caption'           => $data['caption'] ?? null,
+            ':wa_media_id'       => $data['wa_media_id'] ?? null,
         ]);
 
         return (int) $this->pdo->lastInsertId();

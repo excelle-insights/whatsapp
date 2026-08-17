@@ -14,6 +14,7 @@ class MessageService
         private MessageRepository $messages,
         private BusinessProfileRepository $profiles,
         private MessageClient $client,
+        private MediaService $media,
     ) {}
 
     public function sendText(int $profileId, string $to, string $text): object
@@ -315,25 +316,23 @@ class MessageService
 
         $body = null;
         $mediaId = null;
+        $mediaType = null;
+        $mediaMimeType = null;
+        $caption = null;
 
         switch ($type) {
             case 'text':
                 $body = $msg['text']['body'] ?? '';
                 break;
             case 'image':
-                $body = $msg['image']['caption'] ?? '';
-                $mediaId = $msg['image']['id'] ?? null;
-                break;
             case 'video':
-                $body = $msg['video']['caption'] ?? '';
-                $mediaId = $msg['video']['id'] ?? null;
-                break;
             case 'document':
-                $body = $msg['document']['caption'] ?? '';
-                $mediaId = $msg['document']['id'] ?? null;
-                break;
             case 'audio':
-                $mediaId = $msg['audio']['id'] ?? null;
+            case 'sticker':
+                $mediaId      = $msg[$type]['id'] ?? null;
+                $mediaMimeType = $msg[$type]['mime_type'] ?? null;
+                $caption      = $msg[$type]['caption'] ?? null;
+                $mediaType    = $type;
                 break;
             case 'interactive':
                 $interactive = $msg['interactive'] ?? [];
@@ -354,26 +353,50 @@ class MessageService
             ];
         }
 
+        $mediaDownload = null;
+        if ($mediaId && $profile) {
+            try {
+                $mediaDownload = $this->media->downloadAndStore(
+                    (int) $profile->id,
+                    $mediaId,
+                    $mediaType ?? $type,
+                    $caption,
+                );
+            } catch (\Throwable $e) {
+                error_log("WhatsApp media download failed: " . $e->getMessage());
+            }
+        }
+
         $this->messages->create([
-            'profile_id'  => $profile->id ?? null,
-            'direction'   => 'inbound',
-            'wam_id'      => $msgId,
-            'from_number' => $from,
-            'to_number'   => $toNumber,
-            'type'        => $type,
-            'body'        => $body,
-            'media_id'    => $mediaId,
-            'status'      => 'received',
-            'metadata'    => $msg,
+            'profile_id'        => $profile->id ?? null,
+            'direction'         => 'inbound',
+            'wam_id'            => $msgId,
+            'from_number'       => $from,
+            'to_number'         => $toNumber,
+            'type'              => $type,
+            'body'              => $body ?? $caption,
+            'media_id'          => $mediaId,
+            'status'            => 'received',
+            'metadata'          => $msg,
+            'media_type'        => $mediaDownload['media_type'] ?? $mediaType,
+            'media_url'         => $mediaDownload['media_url'] ?? null,
+            'media_mime_type'   => $mediaDownload['media_mime_type'] ?? $mediaMimeType,
+            'media_file_size'   => $mediaDownload['media_file_size'] ?? null,
+            'caption'           => $caption,
+            'wa_media_id'       => $mediaDownload['wa_media_id'] ?? $mediaId,
         ]);
 
         return (object)[
-            'status'     => 'received',
-            'wam_id'     => $msgId,
-            'from'       => $from,
-            'type'       => $type,
-            'body'       => $body,
-            'media_id'   => $mediaId,
+            'status'           => 'received',
+            'wam_id'           => $msgId,
+            'from'             => $from,
+            'type'             => $type,
+            'body'             => $body,
+            'media_id'         => $mediaId,
+            'media_type'       => $mediaDownload['media_type'] ?? $mediaType,
+            'media_url'        => $mediaDownload['media_url'] ?? null,
+            'media_mime_type'  => $mediaDownload['media_mime_type'] ?? $mediaMimeType,
+            'caption'          => $caption,
         ];
     }
 
