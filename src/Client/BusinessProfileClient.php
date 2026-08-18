@@ -9,7 +9,7 @@ class BusinessProfileClient extends BaseClient
     {
         return $this->sendRequest(
             'GET',
-            "{$wabaId}/business_profile"
+            "{$wabaId}/whatsapp_business_profile"
         );
     }
 
@@ -27,7 +27,7 @@ class BusinessProfileClient extends BaseClient
 
         return $this->sendRequest(
             'POST',
-            "{$wabaId}/business_profile",
+            "{$wabaId}/whatsapp_business_profile",
             $payload
         );
     }
