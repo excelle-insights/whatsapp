@@ -18,96 +18,94 @@ class MessageRepository
     {
         $stmt = $this->pdo->prepare("
             INSERT INTO {$this->table} (
-                profile_id, direction, wam_id, from_number, to_number,
-                type, body, media_id, status, template_id, metadata,
+                conversation_id, direction, message_body, message_type,
                 media_type, media_url, media_mime_type, media_file_size,
-                caption, wa_media_id, created_at, updated_at
+                caption, wa_media_id, template_id, wa_message_id,
+                delivery_status, sent_at, author_id, created_at, updated_at
             ) VALUES (
-                :profile_id, :direction, :wam_id, :from_number, :to_number,
-                :type, :body, :media_id, :status, :template_id, :metadata,
+                :conversation_id, :direction, :message_body, :message_type,
                 :media_type, :media_url, :media_mime_type, :media_file_size,
-                :caption, :wa_media_id, NOW(), NOW()
+                :caption, :wa_media_id, :template_id, :wa_message_id,
+                :delivery_status, :sent_at, :author_id, NOW(), NOW()
             )
         ");
 
         $stmt->execute([
-            ':profile_id'        => $data['profile_id'] ?? null,
-            ':direction'         => $data['direction'],
-            ':wam_id'            => $data['wam_id'] ?? null,
-            ':from_number'       => $data['from_number'],
-            ':to_number'         => $data['to_number'],
-            ':type'              => $data['type'],
-            ':body'              => $data['body'] ?? null,
-            ':media_id'          => $data['media_id'] ?? null,
-            ':status'            => $data['status'] ?? 'received',
-            ':template_id'       => $data['template_id'] ?? null,
-            ':metadata'          => !empty($data['metadata']) ? json_encode($data['metadata']) : null,
-            ':media_type'        => $data['media_type'] ?? null,
-            ':media_url'         => $data['media_url'] ?? null,
-            ':media_mime_type'   => $data['media_mime_type'] ?? null,
-            ':media_file_size'   => $data['media_file_size'] ?? null,
-            ':caption'           => $data['caption'] ?? null,
-            ':wa_media_id'       => $data['wa_media_id'] ?? null,
+            ':conversation_id' => $data['conversation_id'] ?? 0,
+            ':direction'       => $data['direction'],
+            ':message_body'    => $data['message_body'] ?? null,
+            ':message_type'    => $data['message_type'] ?? 'text',
+            ':media_type'      => $data['media_type'] ?? null,
+            ':media_url'       => $data['media_url'] ?? null,
+            ':media_mime_type' => $data['media_mime_type'] ?? null,
+            ':media_file_size' => $data['media_file_size'] ?? null,
+            ':caption'         => $data['caption'] ?? null,
+            ':wa_media_id'     => $data['wa_media_id'] ?? null,
+            ':template_id'     => $data['template_id'] ?? null,
+            ':wa_message_id'   => $data['wa_message_id'] ?? null,
+            ':delivery_status' => $data['delivery_status'] ?? null,
+            ':sent_at'         => $data['sent_at'] ?? null,
+            ':author_id'       => $data['author_id'] ?? 0,
         ]);
 
         return (int) $this->pdo->lastInsertId();
     }
 
-    public function updateStatus(int $id, string $status): void
+    public function updateStatus(int $messageId, string $status): void
     {
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
-            SET status = ?, updated_at = NOW()
-            WHERE id = ?
+            SET delivery_status = ?, updated_at = NOW()
+            WHERE message_id = ?
         ");
-        $stmt->execute([$status, $id]);
+        $stmt->execute([$status, $messageId]);
     }
 
-    public function updateWamId(int $id, string $wamId, string $status = 'sent'): void
+    public function updateWaMessageId(int $messageId, string $waMessageId, string $status = 'sent'): void
     {
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
-            SET wam_id = ?, status = ?, updated_at = NOW()
-            WHERE id = ?
+            SET wa_message_id = ?, delivery_status = ?, updated_at = NOW()
+            WHERE message_id = ?
         ");
-        $stmt->execute([$wamId, $status, $id]);
+        $stmt->execute([$waMessageId, $status, $messageId]);
     }
 
-    public function find(int $id): ?object
+    public function find(int $messageId): ?object
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ?");
-        $stmt->execute([$id]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE message_id = ?");
+        $stmt->execute([$messageId]);
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
 
-    public function findByWamId(string $wamId): ?object
+    public function findByWaMessageId(string $waMessageId): ?object
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE wam_id = ?");
-        $stmt->execute([$wamId]);
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE wa_message_id = ?");
+        $stmt->execute([$waMessageId]);
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
 
-    public function getAll(int $profileId, int $limit = 50): array
+    public function getByConversation(int $conversationId, int $limit = 50): array
     {
         $stmt = $this->pdo->prepare("
             SELECT * FROM {$this->table}
-            WHERE profile_id = ?
+            WHERE conversation_id = ?
             ORDER BY created_at DESC
             LIMIT ?
         ");
-        $stmt->execute([$profileId, $limit]);
+        $stmt->execute([$conversationId, $limit]);
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
-    public function getByFromNumber(string $fromNumber, int $limit = 50): array
+    public function getOutboundByConversation(int $conversationId, int $limit = 50): array
     {
         $stmt = $this->pdo->prepare("
             SELECT * FROM {$this->table}
-            WHERE from_number = ?
+            WHERE conversation_id = ? AND direction = 'outbound'
             ORDER BY created_at DESC
             LIMIT ?
         ");
-        $stmt->execute([$fromNumber, $limit]);
+        $stmt->execute([$conversationId, $limit]);
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 }

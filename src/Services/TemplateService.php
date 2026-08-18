@@ -22,32 +22,34 @@ class TemplateService
     {
         TemplateValidator::validate($data);
 
-        $profile = $this->profiles->find((int) $data['profile_id']);
-
-        if (!$profile) {
-            return (object)[
-                'status' => 'failed',
-                'error'  => 'Business profile not found',
-            ];
-        }
-
         $localId = $this->templates->create([
-            'profile_id'    => $profile->id,
-            'name'          => $data['name'],
-            'language'      => $data['language'],
+            'template_name' => $data['template_name'] ?? $data['name'] ?? '',
+            'template_body' => $data['template_body'] ?? $data['body'] ?? '',
+            'placeholders'  => $data['placeholders'] ?? null,
+            'language'      => $data['language'] ?? 'en_US',
             'category'      => $data['category'] ?? 'MARKETING',
-            'header_format' => $data['header_format'] ?? null,
-            'status'        => 'draft',
+            'status'        => 'Pending',
+            'author_id'     => $data['author_id'] ?? 0,
+            'post_date'     => $data['post_date'] ?? null,
         ]);
 
         foreach ($data['components'] ?? [] as $component) {
             $this->components->create($localId, $component);
         }
 
+        $profile = $this->profiles->getFirst();
+        if (!$profile) {
+            return (object)[
+                'status'  => 'draft',
+                'local_id' => $localId,
+                'error'   => 'No business profile configured',
+            ];
+        }
+
         try {
             $response = $this->client->create($profile->waba_id, [
-                'name'       => $data['name'],
-                'language'   => $data['language'],
+                'name'       => $data['template_name'] ?? $data['name'] ?? '',
+                'language'   => $data['language'] ?? 'en_US',
                 'category'   => $data['category'] ?? 'MARKETING',
                 'components' => $data['components'],
             ]);
@@ -57,48 +59,36 @@ class TemplateService
             }
 
             return (object)[
-                'status'              => 'submitted',
-                'local_id'            => $localId,
-                'whatsapp_template_id' => $response->id ?? null,
-                'data'                => $response,
+                'status'         => 'submitted',
+                'local_id'       => $localId,
+                'meta_template_id' => $response->id ?? null,
+                'data'           => $response,
             ];
         } catch (\Throwable $e) {
             error_log("WhatsApp Template sync failed: " . $e->getMessage());
             $this->templates->markFailed($localId, $e->getMessage());
 
             return (object)[
-                'status'   => 'draft',
+                'status'   => 'Pending',
                 'local_id' => $localId,
                 'error'    => $e->getMessage(),
             ];
         }
     }
 
-    public function getAll(int $profileId): object
+    public function getAll(int $authorId = 0): object
     {
-        $local = $this->templates->getAll($profileId);
-
-        $profile = $this->profiles->find($profileId);
-
-        $remote = [];
-        if ($profile) {
-            try {
-                $remoteResult = $this->client->getAll($profile->waba_id);
-                $remote = $remoteResult->data ?? [];
-            } catch (\Throwable $e) {
-                error_log("Failed to fetch templates from Meta: " . $e->getMessage());
-            }
-        }
+        $local = $this->templates->getAll($authorId);
 
         return (object)[
             'local'  => $local,
-            'remote' => $remote,
+            'remote' => [],
         ];
     }
 
-    public function getFromMeta(int $profileId): object
+    public function getFromMeta(): object
     {
-        $profile = $this->profiles->find($profileId);
+        $profile = $this->profiles->getFirst();
 
         if (!$profile) {
             return (object)[
@@ -133,17 +123,17 @@ class TemplateService
             ];
         }
 
-        if (!$template->whatsapp_template_id) {
+        if (!$template->meta_template_id) {
             $this->components->deleteByTemplateId($templateId);
             $this->templates->delete($templateId);
 
             return (object)[
-                'status' => 'deleted',
+                'status'  => 'deleted',
                 'message' => 'Local draft deleted',
             ];
         }
 
-        $profile = $this->profiles->find($template->profile_id);
+        $profile = $this->profiles->getFirst();
 
         if (!$profile) {
             return (object)[
@@ -153,9 +143,10 @@ class TemplateService
         }
 
         try {
-            $this->client->delete($profile->waba_id, $template->name);
+            $this->client->delete($profile->waba_id, $template->template_name);
 
             $this->components->deleteByTemplateId($templateId);
+            $this->templates->delete($templateId);
 
             return (object)[
                 'status'  => 'deleted',
@@ -181,19 +172,18 @@ class TemplateService
             ];
         }
 
-        $templateId = $event['message_template_id'] ?? null;
-        $newStatus  = $event['status'] ?? null;
-        $quality    = $event['quality_score'] ?? null;
-        $reason     = $event['rejection_reason'] ?? null;
+        $metaTemplateId = $event['message_template_id'] ?? null;
+        $newStatus      = $event['status'] ?? null;
+        $reason         = $event['rejection_reason'] ?? null;
 
-        if (!$templateId || !$newStatus) {
+        if (!$metaTemplateId || !$newStatus) {
             return (object)[
                 'status' => 'ignored',
                 'reason' => 'Missing template_id or status',
             ];
         }
 
-        $local = $this->templates->findByWhatsappId($templateId);
+        $local = $this->templates->findByMetaId($metaTemplateId);
         if (!$local) {
             return (object)[
                 'status' => 'ignored',
@@ -201,15 +191,13 @@ class TemplateService
             ];
         }
 
-        $this->templates->updateStatus($local->id, $newStatus, $quality, $reason);
+        $this->templates->updateStatus($local->template_id, $newStatus, $reason);
 
         return (object)[
-            'status'         => 'updated',
-            'local_id'       => $local->id,
-            'new_status'     => $newStatus,
-            'quality_score'  => $quality,
+            'status'           => 'updated',
+            'local_id'         => $local->template_id,
+            'new_status'       => $newStatus,
             'rejection_reason' => $reason,
         ];
     }
-
 }

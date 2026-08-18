@@ -24,6 +24,9 @@ final class CreateHttpRequestLogsTable extends AbstractMigration
             ->addColumn('response_headers', 'text', ['null' => true])
             ->addColumn('response_body', 'text', ['null' => true])
             ->addColumn('error_message', 'text', ['null' => true])
+            ->addColumn('direction', 'string', ['limit' => 10, 'null' => true])
+            ->addColumn('duration_ms', 'decimal', ['precision' => 10, 'scale' => 2, 'null' => true])
+            ->addColumn('source', 'string', ['limit' => 100, 'null' => true])
             ->addColumn('created_at', 'datetime', ['default' => 'CURRENT_TIMESTAMP'])
             ->addColumn('updated_at', 'datetime', [
                 'null' => true,
@@ -31,6 +34,8 @@ final class CreateHttpRequestLogsTable extends AbstractMigration
             ])
             ->addIndex(['method'])
             ->addIndex(['response_status'])
+            ->addIndex(['direction'])
+            ->addIndex(['source'])
             ->create();
     }
 }
