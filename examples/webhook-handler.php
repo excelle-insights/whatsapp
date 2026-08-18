@@ -34,7 +34,9 @@ if ($method === 'GET') {
     $response = $webhook->verify();
     echo $response;
 } elseif ($method === 'POST') {
-    // Incoming message or status update
+    // Incoming message or status update.
+    // Media messages (image/video/audio/document/sticker) are automatically
+    // downloaded to WHATSAPP_MEDIA_PATH and stored on the message record.
     $response = $webhook->process();
     echo $response;
 } else {
