@@ -22,6 +22,7 @@ final class CreateWhatsappTemplatesTable extends AbstractMigration
             ->addColumn('status', 'string', ['limit' => 50, 'default' => 'Pending'])
             ->addColumn('meta_template_id', 'string', ['limit' => 255, 'null' => true])
             ->addColumn('rejection_reason', 'text', ['null' => true])
+            ->addColumn('header_type', 'string', ['limit' => 20, 'null' => true, 'comment' => 'none|text|image|video|document'])
             ->addColumn('author_id', 'integer', ['default' => 0])
             ->addColumn('post_date', 'string', ['limit' => 255, 'null' => true])
             ->addTimestamps()

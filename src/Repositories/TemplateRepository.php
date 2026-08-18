@@ -19,22 +19,24 @@ class TemplateRepository
         $stmt = $this->pdo->prepare("
             INSERT INTO {$this->table} (
                 template_name, template_body, placeholders, language, category,
-                status, author_id, post_date, created_at, updated_at
+                status, header_type, meta_template_id, author_id, post_date, created_at, updated_at
             ) VALUES (
                 :template_name, :template_body, :placeholders, :language, :category,
-                :status, :author_id, :post_date, NOW(), NOW()
+                :status, :header_type, :meta_template_id, :author_id, :post_date, NOW(), NOW()
             )
         ");
 
         $stmt->execute([
-            ':template_name'  => $data['template_name'],
-            ':template_body'  => $data['template_body'],
-            ':placeholders'   => $data['placeholders'] ?? null,
-            ':language'       => $data['language'] ?? 'en_US',
-            ':category'       => $data['category'] ?? 'MARKETING',
-            ':status'         => $data['status'] ?? 'Pending',
-            ':author_id'      => $data['author_id'] ?? 0,
-            ':post_date'      => $data['post_date'] ?? null,
+            ':template_name'    => $data['template_name'],
+            ':template_body'    => $data['template_body'],
+            ':placeholders'     => $data['placeholders'] ?? null,
+            ':language'         => $data['language'] ?? 'en_US',
+            ':category'         => $data['category'] ?? 'MARKETING',
+            ':status'           => $data['status'] ?? 'Pending',
+            ':header_type'      => $data['header_type'] ?? null,
+            ':meta_template_id' => $data['meta_template_id'] ?? null,
+            ':author_id'        => $data['author_id'] ?? 0,
+            ':post_date'        => $data['post_date'] ?? null,
         ]);
 
         return (int) $this->pdo->lastInsertId();
