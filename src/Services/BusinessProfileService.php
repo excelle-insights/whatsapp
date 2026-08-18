@@ -37,7 +37,7 @@ class BusinessProfileService
             // Try to fetch business profile (may fail due to permissions)
             $businessProfile = null;
             try {
-                $businessProfile = $this->client->getProfile($wabaId);
+                $businessProfile = $this->client->getProfile($phoneNumberId);
             } catch (\Throwable $e) {
                 error_log("Could not fetch business profile: " . $e->getMessage());
             }
@@ -155,7 +155,7 @@ class BusinessProfileService
         }
 
         try {
-            $data = $this->client->getProfile($profile->waba_id);
+            $data = $this->client->getProfile($profile->phone_number_id);
 
             return (object)[
                 'status'  => 'success',
@@ -193,7 +193,7 @@ class BusinessProfileService
         }
 
         try {
-            $this->client->updateProfile($profile->waba_id, $updateData);
+            $this->client->updateProfile($profile->phone_number_id, $updateData);
 
             return (object)[
                 'status' => 'success',
