@@ -249,14 +249,14 @@ class WhatsAppManager
         return $this->getTemplateService()->create($data);
     }
 
-    public function getAllTemplates(int $profileId): object
+    public function getAllTemplates(int $authorId = 0): object
     {
-        return $this->getTemplateService()->getAll($profileId);
+        return $this->getTemplateService()->getAll($authorId);
     }
 
-    public function getTemplatesFromMeta(int $profileId): object
+    public function getTemplatesFromMeta(): object
     {
-        return $this->getTemplateService()->getFromMeta($profileId);
+        return $this->getTemplateService()->getFromMeta();
     }
 
     public function deleteTemplate(int $templateId): object
@@ -268,18 +268,18 @@ class WhatsAppManager
     // Messages
     // ---------------------------------------------------------------
 
-    public function sendText(int $profileId, string $to, string $text): object
+    public function sendText(int $conversationId, string $to, string $text): object
     {
-        return $this->getMessageService()->sendText($profileId, $to, $text);
+        return $this->getMessageService()->sendText($conversationId, $to, $text);
     }
 
-    public function sendTemplate(int $profileId, string $to, string $templateName, array $params = []): object
+    public function sendTemplate(int $conversationId, string $to, string $templateName, array $params = []): object
     {
-        return $this->getMessageService()->sendTemplate($profileId, $to, $templateName, $params);
+        return $this->getMessageService()->sendTemplate($conversationId, $to, $templateName, $params);
     }
 
     public function sendMedia(
-        int $profileId,
+        int $conversationId,
         string $to,
         string $type,
         string $mediaId,
@@ -287,12 +287,12 @@ class WhatsAppManager
         ?string $filename = null
     ): object {
         return $this->getMessageService()->sendMedia(
-            $profileId, $to, $type, $mediaId, $caption, $filename
+            $conversationId, $to, $type, $mediaId, $caption, $filename
         );
     }
 
     public function sendMediaByLink(
-        int $profileId,
+        int $conversationId,
         string $to,
         string $type,
         string $link,
@@ -300,7 +300,7 @@ class WhatsAppManager
         ?string $filename = null
     ): object {
         return $this->getMessageService()->sendMediaByLink(
-            $profileId, $to, $type, $link, $caption, $filename
+            $conversationId, $to, $type, $link, $caption, $filename
         );
     }
 
