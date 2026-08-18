@@ -5,15 +5,15 @@ namespace ExcelleInsights\WhatsApp\Client;
 
 class BusinessProfileClient extends BaseClient
 {
-    public function getProfile(string $wabaId): object
+    public function getProfile(string $phoneNumberId): object
     {
         return $this->sendRequest(
             'GET',
-            "{$wabaId}/whatsapp_business_profile"
+            "{$phoneNumberId}/whatsapp_business_profile"
         );
     }
 
-    public function updateProfile(string $wabaId, array $data): object
+    public function updateProfile(string $phoneNumberId, array $data): object
     {
         $payload = array_filter([
             'messaging_product' => 'whatsapp',
@@ -27,7 +27,7 @@ class BusinessProfileClient extends BaseClient
 
         return $this->sendRequest(
             'POST',
-            "{$wabaId}/whatsapp_business_profile",
+            "{$phoneNumberId}/whatsapp_business_profile",
             $payload
         );
     }
