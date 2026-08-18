@@ -7,7 +7,7 @@ class TemplateValidator
 {
     public static function validate(array $data): void
     {
-        $required = ['name', 'language', 'profile_id', 'components'];
+        $required = ['template_name', 'template_body', 'language'];
 
         foreach ($required as $field) {
             if (empty($data[$field])) {
@@ -15,9 +15,8 @@ class TemplateValidator
             }
         }
 
-        self::validateName($data['name']);
+        self::validateName($data['template_name']);
         self::validateLanguage($data['language']);
-        self::validateComponents($data['components']);
     }
 
     public static function validateName(string $name): void

@@ -17,11 +17,11 @@ class MessageService
         private MediaService $media,
     ) {}
 
-    public function sendText(int $profileId, string $to, string $text): object
+    public function sendText(int $conversationId, string $to, string $text): object
     {
         MessageValidator::validateText($to, $text);
 
-        $profile = $this->profiles->find($profileId);
+        $profile = $this->profiles->getFirst();
 
         if (!$profile || !$profile->phone_number_id) {
             return (object)[
@@ -31,27 +31,26 @@ class MessageService
         }
 
         $localId = $this->messages->create([
-            'profile_id'  => $profileId,
-            'direction'   => 'outbound',
-            'from_number' => $profile->phone_number,
-            'to_number'   => $to,
-            'type'        => 'text',
-            'body'        => $text,
-            'status'      => 'pending',
+            'conversation_id' => $conversationId,
+            'direction'       => 'outbound',
+            'message_body'    => $text,
+            'message_type'    => 'text',
+            'delivery_status' => 'pending',
+            'author_id'       => 0,
         ]);
 
         try {
             $response = $this->client->sendText($profile->phone_number_id, $to, $text);
 
             if (isset($response->messages[0]->id)) {
-                $this->messages->updateWamId($localId, $response->messages[0]->id, 'sent');
+                $this->messages->updateWaMessageId($localId, $response->messages[0]->id, 'sent');
             }
 
             return (object)[
-                'status'   => 'sent',
-                'local_id' => $localId,
-                'wam_id'   => $response->messages[0]->id ?? null,
-                'data'     => $response,
+                'status'       => 'sent',
+                'local_id'     => $localId,
+                'wa_message_id' => $response->messages[0]->id ?? null,
+                'data'         => $response,
             ];
         } catch (\Throwable $e) {
             $this->messages->updateStatus($localId, 'failed');
@@ -64,11 +63,11 @@ class MessageService
         }
     }
 
-    public function sendTemplate(int $profileId, string $to, string $templateName, array $params = []): object
+    public function sendTemplate(int $conversationId, string $to, string $templateName, array $params = []): object
     {
         MessageValidator::validateTemplate($to, $templateName);
 
-        $profile = $this->profiles->find($profileId);
+        $profile = $this->profiles->getFirst();
 
         if (!$profile || !$profile->phone_number_id) {
             return (object)[
@@ -78,13 +77,12 @@ class MessageService
         }
 
         $localId = $this->messages->create([
-            'profile_id'  => $profileId,
-            'direction'   => 'outbound',
-            'from_number' => $profile->phone_number,
-            'to_number'   => $to,
-            'type'        => 'template',
-            'body'        => $templateName,
-            'status'      => 'pending',
+            'conversation_id' => $conversationId,
+            'direction'       => 'outbound',
+            'message_body'    => $templateName,
+            'message_type'    => 'template',
+            'delivery_status' => 'pending',
+            'author_id'       => 0,
         ]);
 
         try {
@@ -96,14 +94,14 @@ class MessageService
             );
 
             if (isset($response->messages[0]->id)) {
-                $this->messages->updateWamId($localId, $response->messages[0]->id, 'sent');
+                $this->messages->updateWaMessageId($localId, $response->messages[0]->id, 'sent');
             }
 
             return (object)[
-                'status'   => 'sent',
-                'local_id' => $localId,
-                'wam_id'   => $response->messages[0]->id ?? null,
-                'data'     => $response,
+                'status'       => 'sent',
+                'local_id'     => $localId,
+                'wa_message_id' => $response->messages[0]->id ?? null,
+                'data'         => $response,
             ];
         } catch (\Throwable $e) {
             $this->messages->updateStatus($localId, 'failed');
@@ -117,7 +115,7 @@ class MessageService
     }
 
     public function sendMedia(
-        int $profileId,
+        int $conversationId,
         string $to,
         string $type,
         string $mediaId,
@@ -126,7 +124,7 @@ class MessageService
     ): object {
         MessageValidator::validateMedia($to, $type, $mediaId);
 
-        $profile = $this->profiles->find($profileId);
+        $profile = $this->profiles->getFirst();
 
         if (!$profile || !$profile->phone_number_id) {
             return (object)[
@@ -136,14 +134,13 @@ class MessageService
         }
 
         $localId = $this->messages->create([
-            'profile_id'  => $profileId,
-            'direction'   => 'outbound',
-            'from_number' => $profile->phone_number,
-            'to_number'   => $to,
-            'type'        => $type,
-            'body'        => $caption,
-            'media_id'    => $mediaId,
-            'status'      => 'pending',
+            'conversation_id' => $conversationId,
+            'direction'       => 'outbound',
+            'message_body'    => $caption,
+            'message_type'    => $type,
+            'wa_media_id'     => $mediaId,
+            'delivery_status' => 'pending',
+            'author_id'       => 0,
         ]);
 
         try {
@@ -157,14 +154,14 @@ class MessageService
             );
 
             if (isset($response->messages[0]->id)) {
-                $this->messages->updateWamId($localId, $response->messages[0]->id, 'sent');
+                $this->messages->updateWaMessageId($localId, $response->messages[0]->id, 'sent');
             }
 
             return (object)[
-                'status'   => 'sent',
-                'local_id' => $localId,
-                'wam_id'   => $response->messages[0]->id ?? null,
-                'data'     => $response,
+                'status'       => 'sent',
+                'local_id'     => $localId,
+                'wa_message_id' => $response->messages[0]->id ?? null,
+                'data'         => $response,
             ];
         } catch (\Throwable $e) {
             $this->messages->updateStatus($localId, 'failed');
@@ -178,7 +175,7 @@ class MessageService
     }
 
     public function sendMediaByLink(
-        int $profileId,
+        int $conversationId,
         string $to,
         string $type,
         string $link,
@@ -187,7 +184,7 @@ class MessageService
     ): object {
         MessageValidator::validateMedia($to, $type, $link);
 
-        $profile = $this->profiles->find($profileId);
+        $profile = $this->profiles->getFirst();
 
         if (!$profile || !$profile->phone_number_id) {
             return (object)[
@@ -197,14 +194,13 @@ class MessageService
         }
 
         $localId = $this->messages->create([
-            'profile_id'  => $profileId,
-            'direction'   => 'outbound',
-            'from_number' => $profile->phone_number,
-            'to_number'   => $to,
-            'type'        => $type,
-            'body'        => $caption,
-            'media_id'    => $link,
-            'status'      => 'pending',
+            'conversation_id' => $conversationId,
+            'direction'       => 'outbound',
+            'message_body'    => $caption,
+            'message_type'    => $type,
+            'wa_media_id'     => $link,
+            'delivery_status' => 'pending',
+            'author_id'       => 0,
         ]);
 
         try {
@@ -218,14 +214,14 @@ class MessageService
             );
 
             if (isset($response->messages[0]->id)) {
-                $this->messages->updateWamId($localId, $response->messages[0]->id, 'sent');
+                $this->messages->updateWaMessageId($localId, $response->messages[0]->id, 'sent');
             }
 
             return (object)[
-                'status'   => 'sent',
-                'local_id' => $localId,
-                'wam_id'   => $response->messages[0]->id ?? null,
-                'data'     => $response,
+                'status'       => 'sent',
+                'local_id'     => $localId,
+                'wa_message_id' => $response->messages[0]->id ?? null,
+                'data'         => $response,
             ];
         } catch (\Throwable $e) {
             $this->messages->updateStatus($localId, 'failed');
@@ -257,9 +253,9 @@ class MessageService
             );
 
             return (object)[
-                'status'     => 'uploaded',
-                'media_id'   => $response->id ?? null,
-                'data'       => $response,
+                'status'   => 'uploaded',
+                'media_id' => $response->id ?? null,
+                'data'     => $response,
             ];
         } catch (\Throwable $e) {
             return (object)[
@@ -281,14 +277,12 @@ class MessageService
             foreach ($changes as $change) {
                 $value = $change['value'] ?? [];
 
-                // Process incoming messages
                 $messages = $value['messages'] ?? [];
                 foreach ($messages as $msg) {
                     $result = $this->handleIncomingMessage($value, $msg);
                     $results[] = $result;
                 }
 
-                // Process message status updates
                 $statuses = $value['statuses'] ?? [];
                 foreach ($statuses as $status) {
                     $result = $this->handleStatusUpdate($status);
@@ -344,12 +338,12 @@ class MessageService
                 break;
         }
 
-        $existing = $this->messages->findByWamId($msgId);
+        $existing = $this->messages->findByWaMessageId($msgId);
         if ($existing) {
             return (object)[
-                'status'   => 'duplicate',
-                'wam_id'   => $msgId,
-                'message'  => 'Message already processed',
+                'status'  => 'duplicate',
+                'wa_message_id' => $msgId,
+                'message' => 'Message already processed',
             ];
         }
 
@@ -368,58 +362,54 @@ class MessageService
         }
 
         $this->messages->create([
-            'profile_id'        => $profile->id ?? null,
-            'direction'         => 'inbound',
-            'wam_id'            => $msgId,
-            'from_number'       => $from,
-            'to_number'         => $toNumber,
-            'type'              => $type,
-            'body'              => $body ?? $caption,
-            'media_id'          => $mediaId,
-            'status'            => 'received',
-            'metadata'          => $msg,
-            'media_type'        => $mediaDownload['media_type'] ?? $mediaType,
-            'media_url'         => $mediaDownload['media_url'] ?? null,
-            'media_mime_type'   => $mediaDownload['media_mime_type'] ?? $mediaMimeType,
-            'media_file_size'   => $mediaDownload['media_file_size'] ?? null,
-            'caption'           => $caption,
-            'wa_media_id'       => $mediaDownload['wa_media_id'] ?? $mediaId,
-        ]);
-
-        return (object)[
-            'status'           => 'received',
-            'wam_id'           => $msgId,
-            'from'             => $from,
-            'type'             => $type,
-            'body'             => $body,
-            'media_id'         => $mediaId,
+            'conversation_id'  => 0,
+            'direction'        => 'inbound',
+            'message_body'     => $body ?? $caption,
+            'message_type'     => $type,
             'media_type'       => $mediaDownload['media_type'] ?? $mediaType,
             'media_url'        => $mediaDownload['media_url'] ?? null,
             'media_mime_type'  => $mediaDownload['media_mime_type'] ?? $mediaMimeType,
+            'media_file_size'  => $mediaDownload['media_file_size'] ?? null,
             'caption'          => $caption,
+            'wa_media_id'      => $mediaDownload['wa_media_id'] ?? $mediaId,
+            'wa_message_id'    => $msgId,
+            'delivery_status'  => 'received',
+            'author_id'        => 0,
+        ]);
+
+        return (object)[
+            'status'          => 'received',
+            'wa_message_id'   => $msgId,
+            'from'            => $from,
+            'type'            => $type,
+            'body'            => $body,
+            'media_type'      => $mediaDownload['media_type'] ?? $mediaType,
+            'media_url'       => $mediaDownload['media_url'] ?? null,
+            'media_mime_type' => $mediaDownload['media_mime_type'] ?? $mediaMimeType,
+            'caption'         => $caption,
         ];
     }
 
     private function handleStatusUpdate(array $status): object
     {
-        $wamId    = $status['id'] ?? '';
-        $statusStr = $status['status'] ?? '';
+        $waMessageId = $status['id'] ?? '';
+        $statusStr   = $status['status'] ?? '';
         $conversation = $status['conversation'] ?? null;
 
-        if (!$wamId || !$statusStr) {
+        if (!$waMessageId || !$statusStr) {
             return (object)[
                 'status' => 'ignored',
             ];
         }
 
-        $local = $this->messages->findByWamId($wamId);
+        $local = $this->messages->findByWaMessageId($waMessageId);
         if ($local) {
-            $this->messages->updateStatus($local->id, $statusStr);
+            $this->messages->updateStatus($local->message_id, $statusStr);
         }
 
         return (object)[
-            'status'   => 'updated',
-            'wam_id'   => $wamId,
+            'status'     => 'updated',
+            'wa_message_id' => $waMessageId,
             'new_status' => $statusStr,
             'conversation' => $conversation,
         ];

@@ -36,10 +36,22 @@ class BusinessProfileService
 
             // Try to fetch business profile (may fail due to permissions)
             $businessProfile = null;
-            try {
-                $businessProfile = $this->client->getProfile($phoneNumberId);
-            } catch (\Throwable $e) {
-                error_log("Could not fetch business profile: " . $e->getMessage());
+            if (!$phoneNumberId) {
+                try {
+                    $phones = $this->client->getPhoneNumbers($wabaId);
+                    if (!empty($phones->data[0]->id)) {
+                        $phoneNumberId = $phones->data[0]->id;
+                    }
+                } catch (\Throwable $e) {
+                    error_log("Could not fetch phone numbers for business profile: " . $e->getMessage());
+                }
+            }
+            if ($phoneNumberId) {
+                try {
+                    $businessProfile = $this->client->getProfile($phoneNumberId);
+                } catch (\Throwable $e) {
+                    error_log("Could not fetch business profile: " . $e->getMessage());
+                }
             }
 
             // Upsert: update existing or create new

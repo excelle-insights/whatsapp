@@ -14,18 +14,20 @@ final class CreateWhatsappTemplatesTable extends AbstractMigration
         }
 
         $table
-            ->addColumn('profile_id', 'integer')
-            ->addColumn('name', 'string', ['limit' => 512])
-            ->addColumn('language', 'string', ['limit' => 10])
+            ->addColumn('template_name', 'string', ['limit' => 255])
+            ->addColumn('template_body', 'text')
+            ->addColumn('placeholders', 'text', ['null' => true])
+            ->addColumn('language', 'string', ['limit' => 10, 'null' => true, 'default' => 'en_US'])
             ->addColumn('category', 'string', ['limit' => 50, 'default' => 'MARKETING'])
-            ->addColumn('header_format', 'string', ['limit' => 20, 'null' => true])
-            ->addColumn('status', 'string', ['limit' => 20, 'default' => 'draft'])
-            ->addColumn('quality_score', 'string', ['limit' => 10, 'null' => true])
+            ->addColumn('status', 'string', ['limit' => 50, 'default' => 'Pending'])
+            ->addColumn('meta_template_id', 'string', ['limit' => 255, 'null' => true])
             ->addColumn('rejection_reason', 'text', ['null' => true])
-            ->addColumn('whatsapp_template_id', 'string', ['limit' => 100, 'null' => true])
+            ->addColumn('author_id', 'integer', ['default' => 0])
+            ->addColumn('post_date', 'string', ['limit' => 255, 'null' => true])
             ->addTimestamps()
-            ->addIndex(['profile_id', 'name'])
-            ->addIndex(['whatsapp_template_id'])
+            ->addIndex(['category'])
+            ->addIndex(['status'])
+            ->addIndex(['meta_template_id'])
             ->create();
     }
 }

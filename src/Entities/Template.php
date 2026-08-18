@@ -7,31 +7,33 @@ class Template
 {
     public function __construct(
         public readonly ?int $id,
-        public readonly ?int $profileId,
-        public readonly string $name,
-        public readonly string $language,
+        public readonly string $templateName,
+        public readonly string $templateBody,
+        public readonly ?string $placeholders,
+        public readonly ?string $language,
         public readonly string $category,
-        public readonly ?string $headerFormat,
         public readonly string $status,
-        public readonly ?string $qualityScore,
+        public readonly ?string $metaTemplateId,
         public readonly ?string $rejectionReason,
-        public readonly ?string $whatsappTemplateId,
+        public readonly int $authorId = 0,
+        public readonly ?string $postDate = null,
         public readonly array $components = [],
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            id: $data['id'] ?? null,
-            profileId: $data['profile_id'] ?? null,
-            name: $data['name'],
-            language: $data['language'],
+            id: $data['template_id'] ?? $data['id'] ?? null,
+            templateName: $data['template_name'] ?? $data['name'] ?? '',
+            templateBody: $data['template_body'] ?? $data['body'] ?? '',
+            placeholders: $data['placeholders'] ?? null,
+            language: $data['language'] ?? 'en_US',
             category: $data['category'] ?? 'MARKETING',
-            headerFormat: $data['header_format'] ?? null,
-            status: $data['status'] ?? 'draft',
-            qualityScore: $data['quality_score'] ?? null,
+            status: $data['status'] ?? 'Pending',
+            metaTemplateId: $data['meta_template_id'] ?? $data['whatsapp_template_id'] ?? null,
             rejectionReason: $data['rejection_reason'] ?? null,
-            whatsappTemplateId: $data['whatsapp_template_id'] ?? null,
+            authorId: (int) ($data['author_id'] ?? 0),
+            postDate: $data['post_date'] ?? null,
             components: $data['components'] ?? [],
         );
     }
@@ -39,17 +41,18 @@ class Template
     public function toArray(): array
     {
         return [
-            'id'                    => $this->id,
-            'profile_id'            => $this->profileId,
-            'name'                  => $this->name,
-            'language'              => $this->language,
-            'category'              => $this->category,
-            'header_format'         => $this->headerFormat,
-            'status'                => $this->status,
-            'quality_score'         => $this->qualityScore,
-            'rejection_reason'      => $this->rejectionReason,
-            'whatsapp_template_id'  => $this->whatsappTemplateId,
-            'components'            => $this->components,
+            'template_id'      => $this->id,
+            'template_name'    => $this->templateName,
+            'template_body'    => $this->templateBody,
+            'placeholders'     => $this->placeholders,
+            'language'         => $this->language,
+            'category'         => $this->category,
+            'status'           => $this->status,
+            'meta_template_id' => $this->metaTemplateId,
+            'rejection_reason' => $this->rejectionReason,
+            'author_id'        => $this->authorId,
+            'post_date'        => $this->postDate,
+            'components'       => $this->components,
         ];
     }
 }
