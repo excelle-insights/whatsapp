@@ -18,6 +18,11 @@ use ExcelleInsights\WhatsApp\Repositories\BusinessProfileRepository;
 use ExcelleInsights\WhatsApp\Repositories\TemplateRepository;
 use ExcelleInsights\WhatsApp\Repositories\TemplateComponentRepository;
 use ExcelleInsights\WhatsApp\Repositories\MessageRepository;
+use ExcelleInsights\WhatsApp\Repositories\ConversationRepository;
+use ExcelleInsights\WhatsApp\Repositories\QueueRepository;
+use ExcelleInsights\WhatsApp\Repositories\SettingsRepository;
+use ExcelleInsights\WhatsApp\Repositories\CredentialsRepository;
+use ExcelleInsights\WhatsApp\Repositories\ContactRepository;
 
 use ExcelleInsights\WhatsApp\Services\BusinessProfileService;
 use ExcelleInsights\WhatsApp\Services\TemplateService;
@@ -36,6 +41,11 @@ class WhatsAppManager
     private ?TemplateRepository $templateRepo = null;
     private ?TemplateComponentRepository $componentRepo = null;
     private ?MessageRepository $messageRepo = null;
+    private ?ConversationRepository $conversationRepo = null;
+    private ?QueueRepository $queueRepo = null;
+    private ?SettingsRepository $settingsRepo = null;
+    private ?CredentialsRepository $credentialsRepo = null;
+    private ?ContactRepository $contactRepo = null;
 
     public function __construct(
         ?HttpClientInterface $http = null,
@@ -84,6 +94,35 @@ class WhatsAppManager
     public function getPdo(): PDO
     {
         return $this->pdo;
+    }
+
+    // ---------------------------------------------------------------
+    // Core Repositories
+    // ---------------------------------------------------------------
+
+    public function conversations(): ConversationRepository
+    {
+        return $this->getConversationRepo();
+    }
+
+    public function queue(): QueueRepository
+    {
+        return $this->getQueueRepo();
+    }
+
+    public function settings(): SettingsRepository
+    {
+        return $this->getSettingsRepo();
+    }
+
+    public function credentials(): CredentialsRepository
+    {
+        return $this->getCredentialsRepo();
+    }
+
+    public function contacts(): ContactRepository
+    {
+        return $this->getContactRepo();
     }
 
     // ---------------------------------------------------------------
@@ -144,6 +183,46 @@ class WhatsAppManager
             $this->messageRepo = new MessageRepository($this->pdo);
         }
         return $this->messageRepo;
+    }
+
+    private function getConversationRepo(): ConversationRepository
+    {
+        if (!$this->conversationRepo) {
+            $this->conversationRepo = new ConversationRepository($this->pdo);
+        }
+        return $this->conversationRepo;
+    }
+
+    private function getQueueRepo(): QueueRepository
+    {
+        if (!$this->queueRepo) {
+            $this->queueRepo = new QueueRepository($this->pdo);
+        }
+        return $this->queueRepo;
+    }
+
+    private function getSettingsRepo(): SettingsRepository
+    {
+        if (!$this->settingsRepo) {
+            $this->settingsRepo = new SettingsRepository($this->pdo);
+        }
+        return $this->settingsRepo;
+    }
+
+    private function getCredentialsRepo(): CredentialsRepository
+    {
+        if (!$this->credentialsRepo) {
+            $this->credentialsRepo = new CredentialsRepository($this->pdo);
+        }
+        return $this->credentialsRepo;
+    }
+
+    private function getContactRepo(): ContactRepository
+    {
+        if (!$this->contactRepo) {
+            $this->contactRepo = new ContactRepository($this->pdo);
+        }
+        return $this->contactRepo;
     }
 
     private function getBusinessProfileService(): BusinessProfileService
