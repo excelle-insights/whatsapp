@@ -23,7 +23,7 @@ class Template
     public static function fromArray(array $data): self
     {
         return new self(
-            id: $data['template_id'] ?? $data['id'] ?? null,
+            id: $data['id'] ?? null,
             templateName: $data['template_name'] ?? $data['name'] ?? '',
             templateBody: $data['template_body'] ?? $data['body'] ?? '',
             placeholders: $data['placeholders'] ?? null,
@@ -41,7 +41,7 @@ class Template
     public function toArray(): array
     {
         return [
-            'template_id'      => $this->id,
+            'id'               => $this->id,
             'template_name'    => $this->templateName,
             'template_body'    => $this->templateBody,
             'placeholders'     => $this->placeholders,

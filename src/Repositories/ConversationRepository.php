@@ -16,7 +16,7 @@ class ConversationRepository
 
     public function findById(int $id): ?object
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE conversation_id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
@@ -26,7 +26,7 @@ class ConversationRepository
         $stmt = $this->pdo->prepare("
             SELECT * FROM {$this->table}
             WHERE contact_phone = ?
-            ORDER BY last_message_at DESC, conversation_id DESC
+            ORDER BY last_message_at DESC, id DESC
             LIMIT 1
         ");
         $stmt->execute([$phone]);
@@ -37,7 +37,7 @@ class ConversationRepository
     {
         $stmt = $this->pdo->prepare("
             SELECT * FROM {$this->table}
-            ORDER BY last_message_at DESC, conversation_id DESC
+            ORDER BY last_message_at DESC, id DESC
             LIMIT ?
         ");
         $stmt->bindValue(1, $limit, PDO::PARAM_INT);
@@ -74,7 +74,7 @@ class ConversationRepository
     public function touchLastMessage(int $id, string $ts): void
     {
         $stmt = $this->pdo->prepare("
-            UPDATE {$this->table} SET last_message_at = ? WHERE conversation_id = ?
+            UPDATE {$this->table} SET last_message_at = ? WHERE id = ?
         ");
         $stmt->execute([$ts, $id]);
     }
@@ -85,7 +85,7 @@ class ConversationRepository
             UPDATE {$this->table}
             SET last_message_at = ?, session_expires_at = ?,
                 unread_count = unread_count + 1, status = 'active'
-            WHERE conversation_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$ts, $expiresAt, $id]);
     }
@@ -93,7 +93,7 @@ class ConversationRepository
     public function resetUnread(int $id): void
     {
         $stmt = $this->pdo->prepare("
-            UPDATE {$this->table} SET unread_count = 0 WHERE conversation_id = ?
+            UPDATE {$this->table} SET unread_count = 0 WHERE id = ?
         ");
         $stmt->execute([$id]);
     }
@@ -103,7 +103,7 @@ class ConversationRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET session_expires_at = ?, status = ?
-            WHERE conversation_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$expiresAt, $status, $id]);
     }
@@ -122,7 +122,7 @@ class ConversationRepository
     public function getSessionExpiry(int $id): ?string
     {
         $stmt = $this->pdo->prepare("
-            SELECT session_expires_at FROM {$this->table} WHERE conversation_id = ?
+            SELECT session_expires_at FROM {$this->table} WHERE id = ?
         ");
         $stmt->execute([$id]);
         $value = $stmt->fetchColumn();
@@ -134,7 +134,7 @@ class ConversationRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET session_expires_at = DATE_ADD(NOW(), INTERVAL ? HOUR)
-            WHERE conversation_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$hours, $id]);
     }

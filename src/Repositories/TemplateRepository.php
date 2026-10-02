@@ -45,7 +45,7 @@ class TemplateRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET meta_template_id = ?, status = 'APPROVED', updated_at = NOW()
-            WHERE template_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$metaTemplateId, $id]);
     }
@@ -55,7 +55,7 @@ class TemplateRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET status = 'FAILED', rejection_reason = :error, updated_at = NOW()
-            WHERE template_id = :id
+            WHERE id = :id
         ");
         $stmt->execute([':error' => $error, ':id' => $id]);
     }
@@ -73,14 +73,14 @@ class TemplateRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET " . implode(', ', $fields) . "
-            WHERE template_id = :id
+            WHERE id = :id
         ");
         $stmt->execute($params);
     }
 
     public function find(int $id): ?object
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE template_id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
@@ -129,7 +129,7 @@ class TemplateRepository
 
     public function delete(int $id): void
     {
-        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE template_id = ?");
+        $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
     }
 }
