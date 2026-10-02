@@ -138,4 +138,70 @@ class ConversationRepository
         ");
         $stmt->execute([$hours, $id]);
     }
+
+    public function getByLeadId(int $leadId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM {$this->table}
+            WHERE lead_id = ?
+            ORDER BY last_message_at DESC, id DESC
+        ");
+        $stmt->execute([$leadId]);
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function listPaginated(int $limit = 50, int $offset = 0): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM {$this->table}
+            ORDER BY last_message_at DESC, id DESC
+            LIMIT ? OFFSET ?
+        ");
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function search(string $term, int $limit = 50): array
+    {
+        $like = '%' . $term . '%';
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM {$this->table}
+            WHERE contact_name LIKE ? OR contact_phone LIKE ?
+            ORDER BY last_message_at DESC, id DESC
+            LIMIT ?
+        ");
+        $stmt->bindValue(1, $like);
+        $stmt->bindValue(2, $like);
+        $stmt->bindValue(3, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function count(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table}")->fetchColumn();
+    }
+
+    public function countByStatus(string $status): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE status = ?");
+        $stmt->execute([$status]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function totalUnread(): int
+    {
+        return (int) $this->pdo->query("SELECT COALESCE(SUM(unread_count), 0) FROM {$this->table}")->fetchColumn();
+    }
+
+    public function stats(): array
+    {
+        return [
+            'total'  => $this->count(),
+            'active' => $this->countByStatus('active'),
+            'unread' => $this->totalUnread(),
+        ];
+    }
 }

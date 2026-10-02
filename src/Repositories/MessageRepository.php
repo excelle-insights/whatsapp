@@ -112,4 +112,57 @@ class MessageRepository
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
+
+    public function recent(int $limit = 50): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM {$this->table}
+            ORDER BY created_at DESC, id DESC
+            LIMIT ?
+        ");
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function count(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table}")->fetchColumn();
+    }
+
+    public function countByDirection(string $direction, ?string $since = null, ?string $until = null): int
+    {
+        $sql = "SELECT COUNT(*) FROM {$this->table} WHERE direction = :direction";
+        $params = [':direction' => $direction];
+
+        if ($since !== null) {
+            $sql .= " AND sent_at >= :since";
+            $params[':since'] = $since;
+        }
+
+        if ($until !== null) {
+            $sql .= " AND sent_at < :until";
+            $params[':until'] = $until;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function countByStatus(string $status): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE delivery_status = ?");
+        $stmt->execute([$status]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function stats(): array
+    {
+        return [
+            'total'    => $this->count(),
+            'inbound'  => $this->countByDirection('inbound'),
+            'outbound' => $this->countByDirection('outbound'),
+        ];
+    }
 }

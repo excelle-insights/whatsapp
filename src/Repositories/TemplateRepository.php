@@ -132,4 +132,35 @@ class TemplateRepository
         $stmt = $this->pdo->prepare("DELETE FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
     }
+
+    public function getApproved(): array
+    {
+        $stmt = $this->pdo->query("
+            SELECT * FROM {$this->table}
+            WHERE status = 'Approved'
+            ORDER BY template_name ASC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function count(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table}")->fetchColumn();
+    }
+
+    public function countByStatus(string $status): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE status = ?");
+        $stmt->execute([$status]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function stats(): array
+    {
+        return [
+            'total'    => $this->count(),
+            'pending'  => $this->countByStatus('Pending'),
+            'approved' => $this->countByStatus('Approved'),
+        ];
+    }
 }

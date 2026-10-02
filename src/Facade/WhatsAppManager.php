@@ -125,6 +125,41 @@ class WhatsAppManager
         return $this->getContactRepo();
     }
 
+    public function messages(): MessageRepository
+    {
+        return $this->getMessageRepo();
+    }
+
+    public function templates(): TemplateRepository
+    {
+        return $this->getTemplateRepo();
+    }
+
+    public function profiles(): BusinessProfileRepository
+    {
+        return $this->getProfileRepo();
+    }
+
+    public function dashboardStats(): array
+    {
+        $todayStart    = date('Y-m-d 00:00:00');
+        $tomorrowStart = date('Y-m-d 00:00:00', strtotime('+1 day'));
+        $weekStart     = date('Y-m-d 00:00:00', strtotime('monday this week'));
+
+        return [
+            'inbox_today'          => $this->getMessageRepo()->countByDirection('inbound', $todayStart, $tomorrowStart),
+            'inbox_week'           => $this->getMessageRepo()->countByDirection('inbound', $weekStart),
+            'queue_pending'        => $this->getQueueRepo()->countPending(),
+            'templates_total'      => $this->getTemplateRepo()->count(),
+            'templates_pending'    => $this->getTemplateRepo()->countByStatus('Pending'),
+            'templates_approved'   => $this->getTemplateRepo()->countByStatus('Approved'),
+            'conversations_total'  => $this->getConversationRepo()->count(),
+            'conversations_unread' => $this->getConversationRepo()->totalUnread(),
+            'contacts_total'       => $this->getContactRepo()->count(),
+            'contacts_opted_in'    => $this->getContactRepo()->countOptedIn(),
+        ];
+    }
+
     // ---------------------------------------------------------------
     // Auth
     // ---------------------------------------------------------------
