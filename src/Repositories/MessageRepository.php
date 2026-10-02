@@ -56,7 +56,7 @@ class MessageRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET delivery_status = ?, updated_at = NOW()
-            WHERE message_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$status, $messageId]);
     }
@@ -66,14 +66,14 @@ class MessageRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET wa_message_id = ?, delivery_status = ?, updated_at = NOW()
-            WHERE message_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$waMessageId, $status, $messageId]);
     }
 
     public function find(int $messageId): ?object
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE message_id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->execute([$messageId]);
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
@@ -93,7 +93,9 @@ class MessageRepository
             ORDER BY created_at DESC
             LIMIT ?
         ");
-        $stmt->execute([$conversationId, $limit]);
+        $stmt->bindValue(1, $conversationId, PDO::PARAM_INT);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
@@ -105,7 +107,9 @@ class MessageRepository
             ORDER BY created_at DESC
             LIMIT ?
         ");
-        $stmt->execute([$conversationId, $limit]);
+        $stmt->bindValue(1, $conversationId, PDO::PARAM_INT);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 }

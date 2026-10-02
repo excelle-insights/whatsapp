@@ -27,7 +27,7 @@ class Message
     public static function fromArray(array $data): self
     {
         return new self(
-            id: $data['message_id'] ?? $data['id'] ?? null,
+            id: $data['id'] ?? null,
             conversationId: (int) ($data['conversation_id'] ?? 0),
             direction: $data['direction'] ?? 'outbound',
             messageBody: $data['message_body'] ?? $data['body'] ?? null,
@@ -49,7 +49,7 @@ class Message
     public function toArray(): array
     {
         return [
-            'message_id'       => $this->id,
+            'id'               => $this->id,
             'conversation_id'  => $this->conversationId,
             'direction'        => $this->direction,
             'message_body'     => $this->messageBody,

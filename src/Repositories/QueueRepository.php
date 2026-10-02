@@ -62,7 +62,7 @@ class QueueRepository
             $params[':due_before'] = $dueBefore;
         }
 
-        $sql .= " ORDER BY scheduled_at ASC, queue_id ASC LIMIT {$limit}";
+        $sql .= " ORDER BY scheduled_at ASC, id ASC LIMIT {$limit}";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
@@ -72,7 +72,7 @@ class QueueRepository
     public function findPendingById(int $id): ?object
     {
         $stmt = $this->pdo->prepare("
-            SELECT * FROM {$this->table} WHERE queue_id = ? AND status = 'pending'
+            SELECT * FROM {$this->table} WHERE id = ? AND status = 'pending'
         ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
@@ -83,8 +83,8 @@ class QueueRepository
         $stmt = $this->pdo->prepare("
             SELECT q.*, t.template_name, t.template_body, t.language, t.status AS template_status
             FROM {$this->table} q
-            LEFT JOIN {$this->templatesTable} t ON t.template_id = q.template_id
-            ORDER BY q.queue_id DESC
+            LEFT JOIN {$this->templatesTable} t ON t.id = q.template_id
+            ORDER BY q.id DESC
             LIMIT ?
         ");
         $stmt->bindValue(1, $limit, PDO::PARAM_INT);
@@ -105,7 +105,7 @@ class QueueRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET status = 'sent', sent_at = ?
-            WHERE queue_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$ts, $id]);
     }
@@ -115,7 +115,7 @@ class QueueRepository
         $stmt = $this->pdo->prepare("
             UPDATE {$this->table}
             SET status = 'failed', error_log = ?
-            WHERE queue_id = ?
+            WHERE id = ?
         ");
         $stmt->execute([$error, $id]);
     }

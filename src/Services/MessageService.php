@@ -404,7 +404,7 @@ class MessageService
 
         $local = $this->messages->findByWaMessageId($waMessageId);
         if ($local) {
-            $this->messages->updateStatus($local->message_id, $statusStr);
+            $this->messages->updateStatus($local->id, $statusStr);
         }
 
         return (object)[

@@ -191,11 +191,11 @@ class TemplateService
             ];
         }
 
-        $this->templates->updateStatus($local->template_id, $newStatus, $reason);
+        $this->templates->updateStatus($local->id, $newStatus, $reason);
 
         return (object)[
             'status'           => 'updated',
-            'local_id'         => $local->template_id,
+            'local_id'         => $local->id,
             'new_status'       => $newStatus,
             'rejection_reason' => $reason,
         ];

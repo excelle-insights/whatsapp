@@ -38,7 +38,7 @@ class ContactRepository
 
     public function findById(int $id): ?object
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE contact_id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
@@ -48,7 +48,7 @@ class ContactRepository
         $stmt = $this->pdo->prepare("
             SELECT * FROM {$this->table}
             WHERE phone = ?
-            ORDER BY contact_id DESC
+            ORDER BY id DESC
             LIMIT 1
         ");
         $stmt->execute([$phone]);
@@ -58,7 +58,7 @@ class ContactRepository
     public function findByLeadId(int $leadId): array
     {
         $stmt = $this->pdo->prepare("
-            SELECT * FROM {$this->table} WHERE lead_id = ? ORDER BY contact_id ASC
+            SELECT * FROM {$this->table} WHERE lead_id = ? ORDER BY id ASC
         ");
         $stmt->execute([$leadId]);
         return $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -67,7 +67,7 @@ class ContactRepository
     public function updateOptIn(int $id, int $isOptedIn): void
     {
         $stmt = $this->pdo->prepare("
-            UPDATE {$this->table} SET is_opted_in = ? WHERE contact_id = ?
+            UPDATE {$this->table} SET is_opted_in = ? WHERE id = ?
         ");
         $stmt->execute([$isOptedIn, $id]);
     }
