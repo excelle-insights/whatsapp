@@ -98,4 +98,19 @@ class BusinessProfileRepository
         $stmt = $this->pdo->query("SELECT * FROM {$this->table} ORDER BY id ASC LIMIT 1");
         return $stmt->fetch(PDO::FETCH_OBJ) ?: null;
     }
+
+    public function getActive(): array
+    {
+        $stmt = $this->pdo->query("
+            SELECT * FROM {$this->table}
+            WHERE status = 'active'
+            ORDER BY name ASC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function count(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table}")->fetchColumn();
+    }
 }

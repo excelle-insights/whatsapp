@@ -71,4 +71,57 @@ class ContactRepository
         ");
         $stmt->execute([$isOptedIn, $id]);
     }
+
+    public function listAll(int $limit = 100, int $offset = 0): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM {$this->table}
+            ORDER BY contact_name ASC, id ASC
+            LIMIT ? OFFSET ?
+        ");
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function search(string $term, int $limit = 50): array
+    {
+        $like = '%' . $term . '%';
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM {$this->table}
+            WHERE contact_name LIKE ? OR phone LIKE ?
+            ORDER BY contact_name ASC, id ASC
+            LIMIT ?
+        ");
+        $stmt->bindValue(1, $like);
+        $stmt->bindValue(2, $like);
+        $stmt->bindValue(3, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function count(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table}")->fetchColumn();
+    }
+
+    public function countOptedIn(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table} WHERE is_opted_in = 1")->fetchColumn();
+    }
+
+    public function countOptedOut(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table} WHERE is_opted_in = 0")->fetchColumn();
+    }
+
+    public function stats(): array
+    {
+        return [
+            'total'     => $this->count(),
+            'opted_in'  => $this->countOptedIn(),
+            'opted_out' => $this->countOptedOut(),
+        ];
+    }
 }

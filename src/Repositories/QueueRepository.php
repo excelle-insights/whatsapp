@@ -119,4 +119,34 @@ class QueueRepository
         ");
         $stmt->execute([$error, $id]);
     }
+
+    public function countByStatus(string $status): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM {$this->table} WHERE status = ?");
+        $stmt->execute([$status]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function recentFailed(int $limit = 50): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM {$this->table}
+            WHERE status = 'failed'
+            ORDER BY id DESC
+            LIMIT ?
+        ");
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function stats(): array
+    {
+        return [
+            'total'   => (int) $this->pdo->query("SELECT COUNT(*) FROM {$this->table}")->fetchColumn(),
+            'pending' => $this->countByStatus('pending'),
+            'sent'    => $this->countByStatus('sent'),
+            'failed'  => $this->countByStatus('failed'),
+        ];
+    }
 }
