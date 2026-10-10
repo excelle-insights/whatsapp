@@ -160,6 +160,26 @@ Tables created (all prefixed by `WHATSAPP_TABLE_PREFIX`):
 | `{prefix}_webhook_logs` | Raw webhook audit logs |
 | `http_request_logs` | API request/response logs (non-prefixed) |
 
+### Username-only senders
+
+Some contacts hide their phone number (WhatsApp username privacy). Meta then
+omits `contacts[].wa_id` / `messages[].from` and sends only a stable
+`user_id` (e.g. `KE.1385783877946016`) plus `contacts[].profile.username`.
+
+`ConversationRepository::findBySender($phone, $userId)` resolves a thread by
+phone first, then by `contact_user_id`, so these messages are stored instead
+of dropped:
+
+- `whatsapp_conversations` gains `contact_user_id`, `wa_username` and
+  `is_username_only` (phone becomes nullable).
+- `whatsapp_contacts` gains `user_id` and `wa_username`.
+- `whatsapp_queue` gains `contact_user_id`.
+
+Username-only threads are inbound-only: they have no deliverable `to` number,
+so outbound sends, auto-replies and templates are skipped until the contact
+shares a phone number, at which point `linkSender()` merges the thread by
+`user_id` and clears `is_username_only`.
+
 ## Advanced Usage
 
 ### Custom HTTP Client

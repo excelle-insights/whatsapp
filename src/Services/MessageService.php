@@ -303,6 +303,14 @@ class MessageService
         $type     = $msg['type'] ?? 'unknown';
         $toNumber = $metadata['display_phone_number'] ?? '';
 
+        // Username-only (privacy mode) senders omit `from`; resolve the stable
+        // WhatsApp identifiers instead of losing the sender.
+        $contact      = $value['contacts'][0] ?? [];
+        $waId         = $contact['wa_id'] ?? '';
+        $senderUserId = $msg['from_user_id'] ?? ($contact['user_id'] ?? '');
+        $waUsername   = $contact['profile']['username'] ?? '';
+        $senderPhone  = $from !== '' ? $from : $waId;
+
         $profile = null;
         if ($wabaId) {
             $profile = $this->profiles->findByPhoneNumberId($wabaId);
@@ -380,7 +388,11 @@ class MessageService
         return (object)[
             'status'          => 'received',
             'wa_message_id'   => $msgId,
-            'from'            => $from,
+            'from'            => $senderPhone,
+            'sender_phone'    => $senderPhone !== '' ? $senderPhone : null,
+            'sender_user_id'  => $senderUserId !== '' ? $senderUserId : null,
+            'wa_username'     => $waUsername !== '' ? $waUsername : null,
+            'is_username_only' => ($senderPhone === '' && $senderUserId !== ''),
             'type'            => $type,
             'body'            => $body,
             'media_type'      => $mediaDownload['media_type'] ?? $mediaType,
